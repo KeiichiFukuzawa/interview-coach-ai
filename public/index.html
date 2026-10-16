@@ -119,6 +119,10 @@ const $ = (id) => document.getElementById(id);
 let messages = [];       // {role, content}
 let maxQ = 6;
 let asked = 0;
+let plan = null; // easy mode + saved scripts: scenes asked in order, answers shown verbatim
+
+// "Q1: Can you ...?" -> "Can you ...?"
+const sceneQuestion = (title) => title.replace(/^\s*Q\s*\d+\s*[:.)\-]\s*/i, '').trim();
 let busy = false;
 
 function esc(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
@@ -183,7 +187,10 @@ async function post(url, body, retried = false){
 async function nextQuestion(){
   setBusy(true);
   try {
-    const { reply } = await post('/api/chat', { messages, maxQuestions: maxQ, facts: loadFacts() });
+    const { reply } = await post('/api/chat', {
+      messages, maxQuestions: maxQ, facts: loadFacts(),
+      plannedQuestion: plan ? sceneQuestion(plan[asked].title) : ''
+    });
     messages.push({ role:'assistant', content: reply });
     asked++; updateProgress();
     addMsg('assistant', reply);
@@ -200,14 +207,20 @@ async function showModel(){
   box.className = 'msg model';
   $('log').appendChild(box);
   const ctx = messages.slice(-5);
-  const head = '<span class="who">お手本(イージーモード)</span>';
+  const head = `<span class="who">お手本(${plan ? 'あなたのカンペそのまま' : 'イージーモード'})</span>`;
   const mkBtn = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = fn; return b; };
 
   async function load(){
-    box.innerHTML = head + '<span class="mtext">お手本を作成中…</span>';
+    if (!plan) box.innerHTML = head + '<span class="mtext">お手本を作成中…</span>';
     box.scrollIntoView({ behavior:'smooth', block:'end' });
     try {
-      const { answer } = await post('/api/model-answer', { messages: ctx, kanpe: loadK(), facts: loadFacts() });
+      let answer;
+      if (plan) {
+        // Your own script, verbatim: no API call, no blanks.
+        answer = plan[asked - 1].lines.join('\n');
+      } else {
+        ({ answer } = await post('/api/model-answer', { messages: ctx, kanpe: loadK(), facts: loadFacts() }));
+      }
       if (!answer || !answer.trim()) throw new Error('空のお手本が返りました');
       box.innerHTML = head;
       const t = document.createElement('span'); t.className = 'mtext'; t.textContent = answer; box.appendChild(t);
@@ -225,7 +238,7 @@ async function showModel(){
         mkBtn('🔊 聞く', () => kSpeak(answer)),
         mkBtn('✍ 入力欄に入れる', () => { $('answer').value = answer; $('answer').focus(); }),
         mic,
-        mkBtn('🔄 作り直す', load)
+        ...(plan ? [] : [mkBtn('🔄 作り直す', load)])
       );
       box.append(row, res);
     } catch(e){
@@ -242,6 +255,10 @@ async function showModel(){
 $('start').onclick = async () => {
   unlockSpeech();
   messages = []; asked = 0; maxQ = +$('nq').value;
+  // Easy mode with saved scripts: ask each scene's question in order, show your own script as the answer.
+  const scenes = parseK(loadK()).filter(s => s.lines.length);
+  plan = ($('easy').checked && scenes.length) ? scenes : null;
+  if (plan) maxQ = plan.length;
   $('log').innerHTML = ''; $('feedback').hidden = true; $('composer').hidden = false;
   // The API needs a first user turn; the server adds one if messages is empty,
   // but we must keep the alternation, so store it explicitly.

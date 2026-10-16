@@ -48,7 +48,20 @@ function factsBlock(facts) {
     : "";
 }
 
-function interviewerSystem({ maxQuestions, facts }) {
+function plannedBlock(plannedQuestion) {
+  const q = String(plannedQuestion || "").trim().slice(0, 400);
+  if (!q) return "";
+  return `
+
+PRACTICE MODE (overrides the question mix and follow-up rules above):
+The candidate is rehearsing prepared answers. Your next message must ask exactly this question, keeping its wording:
+"${q}"
+- If it is not phrased as a question, turn it into the natural interview question with the same meaning.
+- On the first turn, give a short greeting first. Otherwise you may add a reaction of at most 8 words to the previous answer.
+- Do not ask any other question and do not ask follow-ups.`;
+}
+
+function interviewerSystem({ maxQuestions, facts, plannedQuestion }) {
   return `You are a friendly but rigorous interviewer for the role: ${ROLE}.
 The candidate is a Japanese speaker practicing English interviews.
 
@@ -65,19 +78,19 @@ Rules:
 - Use the candidate profile only to personalize questions; do not recite it.
 
 Candidate profile:
-${loadProfile()}${factsBlock(facts)}`;
+${loadProfile()}${factsBlock(facts)}${plannedBlock(plannedQuestion)}`;
 }
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { messages = [], maxQuestions = 6, facts = "" } = req.body;
+    const { messages = [], maxQuestions = 6, facts = "", plannedQuestion = "" } = req.body;
     const msgs = messages.length
       ? messages
       : [{ role: "user", content: "Hello, I'm ready to start the interview." }];
     const r = await client.messages.create({
       model: MODEL,
       max_tokens: 300,
-      system: interviewerSystem({ maxQuestions, facts }),
+      system: interviewerSystem({ maxQuestions, facts, plannedQuestion }),
       messages: msgs,
     });
     res.json({ reply: r.content.map((b) => b.text ?? "").join("") });
@@ -95,11 +108,11 @@ Rules:
 - First person, spoken English, simple words and short sentences (about CEFR A2-B1), 40-90 words.
 - If the candidate's own prepared scripts below contain relevant content, reuse their sentences
   and wording as closely as possible, adapting only what the question needs.
-- Do not invent employers, numbers, or achievements. When the question asks for specifics that
-  are not in the profile or scripts (a product name, a concrete problem, a result), still write a
-  complete answer: keep the structure (situation, action, result) and put square-bracket
-  placeholders where a real detail is needed, e.g. [software name], [what went wrong], [result].
-  The candidate will replace the placeholders with true details.
+- If one prepared script fits the question, output that script's sentences unchanged, in the same
+  order. You may drop sentences that do not fit the question, but do not reword them or add new facts.
+- Never use placeholders, blanks, or square brackets. Do not invent employers, numbers, or
+  achievements. If the question needs specifics you do not have, give a shorter honest answer using
+  only the known facts, and bridge to the closest experience in the scripts or profile.
 - ALWAYS output an answer. Never reply with an empty message, a refusal, or a question.
 - Output only the answer text. No quotes, labels, or commentary.`;
 
@@ -122,7 +135,7 @@ app.post("/api/model-answer", async (req, res) => {
         messages: [{
           role: "user",
           content: `Conversation so far:\n\n${convo}\n\nWrite the model answer to the interviewer's last message now.` +
-            (attempt ? "\nYour previous reply was empty. Write the answer text, using [placeholders] for missing details." : ""),
+            (attempt ? "\nYour previous reply was empty. Write the answer text now, using only known facts." : ""),
         }],
       });
       answer = r.content.map((b) => b.text ?? "").join("").trim();
