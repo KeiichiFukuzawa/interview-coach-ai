@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: interview-coach-ai
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: ANTHROPIC_API_KEY
+        sync: false   # set in the Render dashboard
+      - key: APP_PASSWORD
+        sync: false   # set in the Render dashboard

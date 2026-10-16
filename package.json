@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "AI mock interviewer for English job interviews (Product Support Specialist focus)",
   "type": "module",
+  "engines": { "node": ">=20" },
   "scripts": {
     "start": "node server.js"
   },

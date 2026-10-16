@@ -17,6 +17,14 @@ npm start
 # open http://localhost:3000  (Chrome recommended for voice input)
 ```
 
+## Deploy (Render, for phone use)
+
+1. Render dashboard → New → Blueprint → select this repo (`render.yaml` is picked up)
+2. Set `ANTHROPIC_API_KEY` and `APP_PASSWORD` when prompted
+3. Open the issued `https://...onrender.com` URL on your phone (HTTPS is required for the microphone)
+
+The free plan sleeps when idle, so the first request after a break takes ~30-60s.
+
 ## Notes
 
 - Set `APP_PASSWORD` before deploying publicly. The app asks for it once and remembers it in the browser; without it, anyone with the URL can use your API key.

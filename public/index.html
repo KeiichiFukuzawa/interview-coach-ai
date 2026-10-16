@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c96442">
 <title>Interview Coach AI</title>
 <style>
   :root { --bg:#faf9f5; --fg:#1f1e1d; --muted:#6b6a68; --card:#fff; --line:#e3e1da; --accent:#c96442; }
@@ -11,7 +12,7 @@
   }
   * { box-sizing: border-box; }
   body { margin:0; font:16px/1.6 system-ui,-apple-system,"Hiragino Sans",sans-serif; background:var(--bg); color:var(--fg); }
-  main { max-width:720px; margin:0 auto; padding:16px; display:flex; flex-direction:column; min-height:100vh; }
+  main { max-width:720px; margin:0 auto; padding:16px 16px 0; display:flex; flex-direction:column; min-height:100vh; min-height:100dvh; }
   h1 { font-size:1.2rem; margin:8px 0 4px; }
   .sub { color:var(--muted); font-size:.85rem; margin-bottom:12px; }
   .bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; font-size:.9rem; }
@@ -23,14 +24,22 @@
   .msg.assistant { align-self:flex-start; }
   .msg.user { align-self:flex-end; border-color:var(--accent); }
   .msg .who { font-size:.7rem; color:var(--muted); display:block; margin-bottom:2px; }
-  #composer { position:sticky; bottom:0; background:var(--bg); padding:8px 0 16px; }
+  #composer { position:sticky; bottom:0; background:var(--bg); padding:8px 0 calc(12px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); }
+  .row button { flex:1 1 auto; }
+  #mic { flex:1 1 100%; padding:14px; font-size:1.05rem; }
+  #mic.rec { background:var(--accent); border-color:var(--accent); color:#fff; }
+  @media (max-width: 600px) {
+    button { min-height:44px; }
+    textarea { min-height:64px; max-height:30vh; }
+    .msg { max-width:96%; }
+    #send { flex:2 1 auto; }
+  }
   textarea { width:100%; min-height:72px; padding:10px; font:inherit; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--fg); resize:vertical; }
   .row { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
   #feedback { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-top:12px; }
   #feedback h2 { font-size:1.05rem; margin:16px 0 4px; }
   #feedback p { margin:6px 0; }
   .hint { color:var(--muted); font-size:.8rem; }
-  .rec { color:var(--accent); }
 </style>
 </head>
 <body>
