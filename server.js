@@ -77,6 +77,40 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+const MODEL_ANSWER_SYSTEM = `You write model answers for a Japanese speaker practicing English
+interviews for ${ROLE}. You get the conversation so far. Write the answer the candidate could
+give to the interviewer's LAST message.
+
+Rules:
+- First person, spoken English, simple words and short sentences (about CEFR A2-B1), 40-90 words.
+- If the candidate's own prepared scripts below contain relevant content, reuse their sentences
+  and wording as closely as possible, adapting only what the question needs.
+- Use only facts found in the candidate profile or scripts. Never invent employers, numbers,
+  or achievements; if details are missing, stay general.
+- Output only the answer text. No quotes, labels, or commentary.`;
+
+app.post("/api/model-answer", async (req, res) => {
+  try {
+    const { messages = [], kanpe = "" } = req.body;
+    const convo = messages
+      .map((m) => `${m.role === "assistant" ? "Interviewer" : "Candidate"}: ${m.content}`)
+      .join("\n\n");
+    const r = await client.messages.create({
+      model: MODEL,
+      max_tokens: 400,
+      system:
+        MODEL_ANSWER_SYSTEM +
+        "\n\nCandidate profile:\n" + loadProfile() +
+        "\n\nCandidate's prepared scripts:\n" + (String(kanpe).slice(0, 12000) || "(none)"),
+      messages: [{ role: "user", content: `Conversation so far:\n\n${convo}\n\nWrite the model answer now.` }],
+    });
+    res.json({ answer: r.content.map((b) => b.text ?? "").join("").trim() });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 const FEEDBACK_SYSTEM = `You are an interview coach for a Japanese speaker practicing
 English interviews for ${ROLE}. You will receive a transcript. Respond in
 Markdown with these sections, in this order:
