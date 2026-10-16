@@ -30,6 +30,8 @@ app.use("/api", (req, res, next) => {
 });
 
 function loadProfile() {
+  // On hosts without the gitignored file (e.g. Render), set PROFILE_MD instead.
+  if (process.env.PROFILE_MD) return process.env.PROFILE_MD;
   const p = path.join(__dirname, "profile.local.md");
   return fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "(no candidate profile provided)";
 }

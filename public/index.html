@@ -40,6 +40,16 @@
   #feedback h2 { font-size:1.05rem; margin:16px 0 4px; }
   #feedback p { margin:6px 0; }
   .hint { color:var(--muted); font-size:.8rem; }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; }
+  .tab { flex:1; }
+  .tab.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .kcard { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:12px; }
+  .kcard h3 { font-size:.95rem; margin:0 0 8px; }
+  .kline { display:block; padding:4px 0; cursor:pointer; }
+  .blur .kline:not(.reveal) { filter:blur(6px); }
+  .kres { margin-top:10px; padding-top:8px; border-top:1px dashed var(--line); line-height:1.9; }
+  .miss { color:#d1342f; text-decoration:underline; font-weight:600; }
+  .kcard .row button { flex:1 1 auto; }
 </style>
 </head>
 <body>
@@ -47,6 +57,12 @@
   <h1>Interview Coach AI</h1>
   <div class="sub">Product Support Specialist 面接の英語模擬面接</div>
 
+  <div class="tabs">
+    <button id="tabI" class="tab on">模擬面接</button>
+    <button id="tabK" class="tab">カンペ音読</button>
+  </div>
+
+  <div id="viewI">
   <div class="bar">
     <button id="start" class="primary">面接を始める</button>
     <label><input type="checkbox" id="tts" checked> 質問を音声で読み上げ</label>
@@ -69,6 +85,23 @@
   </div>
 
   <div id="feedback" hidden></div>
+  </div><!-- /viewI -->
+
+  <div id="viewK" hidden>
+    <div class="bar">
+      <button id="kEdit">📝 カンペを貼る/編集</button>
+      <label>速度
+        <select id="kRate"><option value="0.7">0.7</option><option value="0.85" selected>0.85</option><option value="1">1.0</option></select>
+      </label>
+      <label><input type="checkbox" id="kHide"> 文字をぼかす</label>
+    </div>
+    <div id="kEditor" hidden>
+      <textarea id="kText" style="min-height:220px" placeholder="=== 場面名 ===&#10;英文をここに貼る"></textarea>
+      <div class="row"><button id="kSave" class="primary">保存</button></div>
+      <div class="hint">「=== 場面名 ===」の行で場面を区切ります。このスマホのブラウザ内にだけ保存され、サーバーには送られません。</div>
+    </div>
+    <div id="kCards"></div>
+  </div>
 </main>
 
 <script>
@@ -214,6 +247,105 @@ else {
     rec.start();
   };
 }
+// ---------- Script (カンペ) read-aloud mode ----------
+function showTab(k){
+  $('viewI').hidden = k; $('viewK').hidden = !k;
+  $('tabI').classList.toggle('on', !k); $('tabK').classList.toggle('on', k);
+  speechSynthesis.cancel?.();
+  if (k) renderK();
+}
+$('tabI').onclick = () => showTab(false);
+$('tabK').onclick = () => showTab(true);
+
+function loadK(){ try { return localStorage.getItem('kanpe') || ''; } catch { return ''; } }
+function parseK(t){
+  const out = []; let cur = null;
+  for (const raw of t.split(/\r?\n/)) {
+    const m = raw.match(/^\s*=+\s*(.+?)\s*=+\s*$/);
+    if (m) { cur = { title: m[1], lines: [] }; out.push(cur); continue; }
+    if (!raw.trim()) continue;
+    if (!cur) { cur = { title: 'カンペ', lines: [] }; out.push(cur); }
+    cur.lines.push(raw.trim());
+  }
+  return out;
+}
+function kSpeak(text){
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = +$('kRate').value;
+  const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith('en-US'));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+const tokNorm = (t) => t.toLowerCase().replace(/[^a-z0-9']/g, '');
+function lcsMatch(ref, hyp){
+  const n = ref.length, m = hyp.length;
+  const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--)
+    dp[i][j] = ref[i] === hyp[j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  const ok = new Array(n).fill(false); let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (ref[i] === hyp[j]) { ok[i] = true; i++; j++; }
+    else if (dp[i+1][j] >= dp[i][j+1]) i++; else j++;
+  }
+  return ok;
+}
+function showCheck(box, fullText, heard){
+  const toks = fullText.split(/\s+/).filter(Boolean);
+  const ref = toks.map(tokNorm);
+  const idx = ref.map((r, i) => r ? i : -1).filter(i => i >= 0);
+  const hyp = heard.split(/\s+/).map(tokNorm).filter(Boolean);
+  const ok = lcsMatch(idx.map(i => ref[i]), hyp);
+  const good = new Set(idx.filter((_, k) => ok[k]));
+  const pct = idx.length ? Math.round(100 * ok.filter(Boolean).length / idx.length) : 0;
+  box.innerHTML = `<div class="hint">一致率 ${pct}%(赤い単語は聞き取れなかった/違った部分)</div>` +
+    toks.map((t, i) => ref[i] && !good.has(i) ? `<span class="miss">${esc(t)}</span>` : esc(t)).join(' ');
+}
+
+let kRec = null, kActive = null;
+function kStopRec(){ try { kRec && kRec.stop(); } catch {} }
+function kToggleMic(btn, fullText, box){
+  if (!SR) { box.textContent = 'このブラウザは音声認識に未対応です(Chrome/Safari推奨)。'; return; }
+  if (kActive === btn) { kStopRec(); return; }
+  kStopRec(); speechSynthesis.cancel?.();
+  let heard = '';
+  const r = new SR(); r.lang = 'en-US'; r.interimResults = false; r.continuous = true;
+  r.onresult = (e) => { heard = ''; for (let i = 0; i < e.results.length; i++) heard += ' ' + e.results[i][0].transcript; };
+  r.onend = () => { btn.textContent = '🎤 音読チェック'; if (kActive === btn) kActive = null; showCheck(box, fullText, heard); };
+  btn.textContent = '⏹ 終了して採点'; kActive = btn; kRec = r; r.start();
+}
+
+function renderK(){
+  const cards = parseK(loadK());
+  const wrap = $('kCards'); wrap.innerHTML = '';
+  wrap.classList.toggle('blur', $('kHide').checked);
+  if (!cards.length) { wrap.innerHTML = '<div class="hint">まだカンペがありません。「📝 カンペを貼る/編集」から貼り付けてください。</div>'; return; }
+  for (const c of cards) {
+    const full = c.lines.join(' ');
+    const d = document.createElement('div'); d.className = 'kcard';
+    const h = document.createElement('h3'); h.textContent = c.title; d.appendChild(h);
+    for (const line of c.lines) {
+      const s = document.createElement('span'); s.className = 'kline'; s.textContent = line;
+      s.onclick = () => { s.classList.add('reveal'); kSpeak(line); };
+      d.appendChild(s);
+    }
+    const row = document.createElement('div'); row.className = 'row';
+    const play = document.createElement('button'); play.textContent = '▶ 全文を聞く'; play.onclick = () => kSpeak(full);
+    const stop = document.createElement('button'); stop.textContent = '⏹'; stop.onclick = () => speechSynthesis.cancel();
+    const mic = document.createElement('button'); mic.textContent = '🎤 音読チェック';
+    const res = document.createElement('div'); res.className = 'kres'; res.hidden = false;
+    mic.onclick = () => kToggleMic(mic, full, res);
+    row.append(play, stop, mic); d.appendChild(row); d.appendChild(res);
+    wrap.appendChild(d);
+  }
+}
+$('kEdit').onclick = () => { $('kEditor').hidden = !$('kEditor').hidden; $('kText').value = loadK(); };
+$('kSave').onclick = () => {
+  try { localStorage.setItem('kanpe', $('kText').value); } catch {}
+  $('kEditor').hidden = true; renderK();
+};
+$('kHide').onchange = renderK;
 </script>
 </body>
 </html>

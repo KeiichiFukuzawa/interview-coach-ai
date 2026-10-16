@@ -25,6 +25,14 @@ npm start
 
 The free plan sleeps when idle, so the first request after a break takes ~30-60s.
 
+## Script read-aloud mode (カンペ音読)
+
+The "カンペ音読" tab lets you paste your own answer scripts (split into scenes with `=== Title ===` lines), listen at 0.7-1.0x speed, blur the text to practice from memory, and read aloud with the mic to see which words were missed. Scripts are stored in the browser's localStorage only, so they never reach the server or this repo.
+
+## Candidate profile on Render
+
+`profile.local.md` is gitignored, so it is not on Render. Paste its contents into a `PROFILE_MD` environment variable there instead.
+
 ## Notes
 
 - Set `APP_PASSWORD` before deploying publicly. The app asks for it once and remembers it in the browser; without it, anyone with the URL can use your API key.
