@@ -8,6 +8,8 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MODEL = process.env.MODEL || "claude-sonnet-5-5";
+// Feedback is the quality-critical step, so it can use a stronger model than the rest.
+const FEEDBACK_MODEL = process.env.FEEDBACK_MODEL || MODEL;
 const PORT = process.env.PORT || 3000;
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY
 
@@ -159,7 +161,7 @@ app.post("/api/feedback", async (req, res) => {
       .map((m) => `${m.role === "assistant" ? "Interviewer" : "Candidate"}: ${m.content}`)
       .join("\n\n");
     const r = await client.messages.create({
-      model: MODEL,
+      model: FEEDBACK_MODEL,
       max_tokens: 3000,
       system: FEEDBACK_SYSTEM + loadProfile() + factsBlock(facts),
       messages: [{ role: "user", content: `Transcript:\n\n${transcript}` }],

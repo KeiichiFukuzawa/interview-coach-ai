@@ -38,7 +38,7 @@ The "カンペ音読" tab lets you paste your own answer scripts (split into sce
 - Set `APP_PASSWORD` before deploying publicly. The app asks for it once and remembers it in the browser; without it, anyone with the URL can use your API key.
 - The API key stays on the server; the browser only talks to `/api/chat` and `/api/feedback`.
 - `profile.local.md` is gitignored so personal career details never reach this repo.
-- Model defaults to `claude-sonnet-5-5` (override with `MODEL` in `.env`).
+- Model defaults to `claude-sonnet-5-5` (override with `MODEL`). Set `FEEDBACK_MODEL` to use a different model just for the final feedback; e.g. `MODEL=claude-haiku-5-5` with `FEEDBACK_MODEL=claude-sonnet-5-5` is much cheaper with little loss where it matters.
 
 ## Roadmap
 
