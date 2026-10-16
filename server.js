@@ -38,7 +38,15 @@ function loadProfile() {
 
 const ROLE = "Product Support Specialist at Anthropic Japan (Tokyo)";
 
-function interviewerSystem({ maxQuestions }) {
+// Extra personal facts typed in the browser (kept in localStorage, never in the repo).
+function factsBlock(facts) {
+  const f = String(facts || "").trim().slice(0, 8000);
+  return f
+    ? `\n\nExtra facts from the candidate (may be in Japanese; treat as true, and translate to natural spoken English when used):\n${f}`
+    : "";
+}
+
+function interviewerSystem({ maxQuestions, facts }) {
   return `You are a friendly but rigorous interviewer for the role: ${ROLE}.
 The candidate is a Japanese speaker practicing English interviews.
 
@@ -55,19 +63,19 @@ Rules:
 - Use the candidate profile only to personalize questions; do not recite it.
 
 Candidate profile:
-${loadProfile()}`;
+${loadProfile()}${factsBlock(facts)}`;
 }
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { messages = [], maxQuestions = 6 } = req.body;
+    const { messages = [], maxQuestions = 6, facts = "" } = req.body;
     const msgs = messages.length
       ? messages
       : [{ role: "user", content: "Hello, I'm ready to start the interview." }];
     const r = await client.messages.create({
       model: MODEL,
       max_tokens: 300,
-      system: interviewerSystem({ maxQuestions }),
+      system: interviewerSystem({ maxQuestions, facts }),
       messages: msgs,
     });
     res.json({ reply: r.content.map((b) => b.text ?? "").join("") });
@@ -95,13 +103,13 @@ Rules:
 
 app.post("/api/model-answer", async (req, res) => {
   try {
-    const { messages = [], kanpe = "" } = req.body;
+    const { messages = [], kanpe = "", facts = "" } = req.body;
     const convo = messages
       .map((m) => `${m.role === "assistant" ? "Interviewer" : "Candidate"}: ${m.content}`)
       .join("\n\n");
     const system =
       MODEL_ANSWER_SYSTEM +
-      "\n\nCandidate profile:\n" + loadProfile() +
+      "\n\nCandidate profile:\n" + loadProfile() + factsBlock(facts) +
       "\n\nCandidate's prepared scripts:\n" + (String(kanpe).slice(0, 12000) || "(none)");
     let answer = "";
     for (let attempt = 0; attempt < 2 && !answer; attempt++) {
@@ -146,14 +154,14 @@ Candidate profile:
 
 app.post("/api/feedback", async (req, res) => {
   try {
-    const { messages = [] } = req.body;
+    const { messages = [], facts = "" } = req.body;
     const transcript = messages
       .map((m) => `${m.role === "assistant" ? "Interviewer" : "Candidate"}: ${m.content}`)
       .join("\n\n");
     const r = await client.messages.create({
       model: MODEL,
       max_tokens: 3000,
-      system: FEEDBACK_SYSTEM + loadProfile(),
+      system: FEEDBACK_SYSTEM + loadProfile() + factsBlock(facts),
       messages: [{ role: "user", content: `Transcript:\n\n${transcript}` }],
     });
     res.json({ feedback: r.content.map((b) => b.text ?? "").join("") });

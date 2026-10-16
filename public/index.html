@@ -94,6 +94,7 @@
   <div id="viewK" hidden>
     <div class="bar">
       <button id="kEdit">📝 カンペを貼る/編集</button>
+      <button id="fEdit">🧾 事実メモ(日本語OK)</button>
       <label>速度
         <select id="kRate"><option value="0.7">0.7</option><option value="0.85" selected>0.85</option><option value="1">1.0</option></select>
       </label>
@@ -103,6 +104,11 @@
       <textarea id="kText" style="min-height:220px" placeholder="=== 場面名 ===&#10;英文をここに貼る"></textarea>
       <div class="row"><button id="kSave" class="primary">保存</button></div>
       <div class="hint">「=== 場面名 ===」の行で場面を区切ります。このスマホのブラウザ内にだけ保存され、サーバーには送られません。</div>
+    </div>
+    <div id="fEditor" hidden>
+      <textarea id="fText" style="min-height:260px" placeholder="例:&#10;・Deloitte: RPA開発。Power Apps / Power Automateで〇〇アプリを作成。結果は〇〇&#10;・Uber Eats CS: ゴーストカスタマー対応。〇〇&#10;・使ったソフト名、数字、結果など思い出したこと"></textarea>
+      <div class="row"><button id="fSave" class="primary">メモを保存</button></div>
+      <div class="hint">お手本・面接官の質問・フィードバックに使われます(音読カードには出ません)。このスマホのブラウザ内にだけ保存され、リポジトリには載りません。</div>
     </div>
     <div id="kCards"></div>
   </div>
@@ -177,7 +183,7 @@ async function post(url, body, retried = false){
 async function nextQuestion(){
   setBusy(true);
   try {
-    const { reply } = await post('/api/chat', { messages, maxQuestions: maxQ });
+    const { reply } = await post('/api/chat', { messages, maxQuestions: maxQ, facts: loadFacts() });
     messages.push({ role:'assistant', content: reply });
     asked++; updateProgress();
     addMsg('assistant', reply);
@@ -201,7 +207,7 @@ async function showModel(){
     box.innerHTML = head + '<span class="mtext">お手本を作成中…</span>';
     box.scrollIntoView({ behavior:'smooth', block:'end' });
     try {
-      const { answer } = await post('/api/model-answer', { messages: ctx, kanpe: loadK() });
+      const { answer } = await post('/api/model-answer', { messages: ctx, kanpe: loadK(), facts: loadFacts() });
       if (!answer || !answer.trim()) throw new Error('空のお手本が返りました');
       box.innerHTML = head;
       const t = document.createElement('span'); t.className = 'mtext'; t.textContent = answer; box.appendChild(t);
@@ -261,7 +267,7 @@ async function finish(){
   try {
     // Drop the synthetic opener from the transcript.
     const transcript = messages.slice(1);
-    const { feedback } = await post('/api/feedback', { messages: transcript });
+    const { feedback } = await post('/api/feedback', { messages: transcript, facts: loadFacts() });
     box.innerHTML = renderMd(feedback);
     box.scrollIntoView({ behavior:'smooth' });
     saveSession(transcript, feedback);
@@ -397,6 +403,13 @@ $('kSave').onclick = () => {
   $('kEditor').hidden = true; renderK();
 };
 $('kHide').onchange = renderK;
+
+function loadFacts(){ try { return localStorage.getItem('facts') || ''; } catch { return ''; } }
+$('fEdit').onclick = () => { $('fEditor').hidden = !$('fEditor').hidden; $('fText').value = loadFacts(); };
+$('fSave').onclick = () => {
+  try { localStorage.setItem('facts', $('fText').value); } catch {}
+  $('fEditor').hidden = true;
+};
 </script>
 </body>
 </html>
