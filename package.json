@@ -1,0 +1,14 @@
+{
+  "name": "interview-coach-ai",
+  "version": "0.1.0",
+  "description": "AI mock interviewer for English job interviews (Product Support Specialist focus)",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.60.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
