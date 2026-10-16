@@ -192,22 +192,45 @@ async function showModel(){
   if (!$('easy').checked) return;
   const box = document.createElement('div');
   box.className = 'msg model';
-  box.innerHTML = '<span class="who">お手本(イージーモード)</span><span class="mtext">お手本を作成中…</span>';
   $('log').appendChild(box);
-  box.scrollIntoView({ behavior:'smooth', block:'end' });
-  try {
-    const { answer } = await post('/api/model-answer', { messages: messages.slice(-5), kanpe: loadK() });
-    box.querySelector('.mtext').textContent = answer;
-    const row = document.createElement('div'); row.className = 'mrow';
-    const listen = document.createElement('button'); listen.textContent = '🔊 聞く'; listen.onclick = () => kSpeak(answer);
-    const fill = document.createElement('button'); fill.textContent = '✍ 入力欄に入れる'; fill.onclick = () => { $('answer').value = answer; $('answer').focus(); };
-    const mic = document.createElement('button'); mic.textContent = '🎤 音読チェック';
-    const res = document.createElement('div'); res.className = 'kres';
-    mic.onclick = () => kToggleMic(mic, answer, res);
-    row.append(listen, fill, mic);
-    box.append(row, res);
+  const ctx = messages.slice(-5);
+  const head = '<span class="who">お手本(イージーモード)</span>';
+  const mkBtn = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = fn; return b; };
+
+  async function load(){
+    box.innerHTML = head + '<span class="mtext">お手本を作成中…</span>';
     box.scrollIntoView({ behavior:'smooth', block:'end' });
-  } catch(e){ box.querySelector('.mtext').textContent = 'お手本を取得できませんでした: ' + e.message; }
+    try {
+      const { answer } = await post('/api/model-answer', { messages: ctx, kanpe: loadK() });
+      if (!answer || !answer.trim()) throw new Error('空のお手本が返りました');
+      box.innerHTML = head;
+      const t = document.createElement('span'); t.className = 'mtext'; t.textContent = answer; box.appendChild(t);
+      const hasPh = /\[[^\]]+\]/.test(answer);
+      if (hasPh) {
+        const n = document.createElement('div'); n.className = 'hint';
+        n.textContent = '[ ]の部分は、あなたの実際の経験に置き換えて話してください。';
+        box.appendChild(n);
+      }
+      const row = document.createElement('div'); row.className = 'mrow';
+      const mic = mkBtn('🎤 音読チェック');
+      const res = document.createElement('div'); res.className = 'kres';
+      mic.onclick = () => kToggleMic(mic, answer, res);
+      row.append(
+        mkBtn('🔊 聞く', () => kSpeak(answer)),
+        mkBtn('✍ 入力欄に入れる', () => { $('answer').value = answer; $('answer').focus(); }),
+        mic,
+        mkBtn('🔄 作り直す', load)
+      );
+      box.append(row, res);
+    } catch(e){
+      box.innerHTML = head + `<span class="mtext">お手本を取得できませんでした: ${esc(e.message)}</span>`;
+      const row = document.createElement('div'); row.className = 'mrow';
+      row.append(mkBtn('🔄 もう一度作る', load));
+      box.appendChild(row);
+    }
+    box.scrollIntoView({ behavior:'smooth', block:'end' });
+  }
+  load();
 }
 
 $('start').onclick = async () => {

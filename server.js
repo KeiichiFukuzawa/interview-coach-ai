@@ -85,8 +85,12 @@ Rules:
 - First person, spoken English, simple words and short sentences (about CEFR A2-B1), 40-90 words.
 - If the candidate's own prepared scripts below contain relevant content, reuse their sentences
   and wording as closely as possible, adapting only what the question needs.
-- Use only facts found in the candidate profile or scripts. Never invent employers, numbers,
-  or achievements; if details are missing, stay general.
+- Do not invent employers, numbers, or achievements. When the question asks for specifics that
+  are not in the profile or scripts (a product name, a concrete problem, a result), still write a
+  complete answer: keep the structure (situation, action, result) and put square-bracket
+  placeholders where a real detail is needed, e.g. [software name], [what went wrong], [result].
+  The candidate will replace the placeholders with true details.
+- ALWAYS output an answer. Never reply with an empty message, a refusal, or a question.
 - Output only the answer text. No quotes, labels, or commentary.`;
 
 app.post("/api/model-answer", async (req, res) => {
@@ -95,16 +99,26 @@ app.post("/api/model-answer", async (req, res) => {
     const convo = messages
       .map((m) => `${m.role === "assistant" ? "Interviewer" : "Candidate"}: ${m.content}`)
       .join("\n\n");
-    const r = await client.messages.create({
-      model: MODEL,
-      max_tokens: 400,
-      system:
-        MODEL_ANSWER_SYSTEM +
-        "\n\nCandidate profile:\n" + loadProfile() +
-        "\n\nCandidate's prepared scripts:\n" + (String(kanpe).slice(0, 12000) || "(none)"),
-      messages: [{ role: "user", content: `Conversation so far:\n\n${convo}\n\nWrite the model answer now.` }],
-    });
-    res.json({ answer: r.content.map((b) => b.text ?? "").join("").trim() });
+    const system =
+      MODEL_ANSWER_SYSTEM +
+      "\n\nCandidate profile:\n" + loadProfile() +
+      "\n\nCandidate's prepared scripts:\n" + (String(kanpe).slice(0, 12000) || "(none)");
+    let answer = "";
+    for (let attempt = 0; attempt < 2 && !answer; attempt++) {
+      const r = await client.messages.create({
+        model: MODEL,
+        max_tokens: 500,
+        system,
+        messages: [{
+          role: "user",
+          content: `Conversation so far:\n\n${convo}\n\nWrite the model answer to the interviewer's last message now.` +
+            (attempt ? "\nYour previous reply was empty. Write the answer text, using [placeholders] for missing details." : ""),
+        }],
+      });
+      answer = r.content.map((b) => b.text ?? "").join("").trim();
+    }
+    if (!answer) return res.status(502).json({ error: "empty answer from model" });
+    res.json({ answer });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message });
