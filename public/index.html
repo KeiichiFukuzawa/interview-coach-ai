@@ -93,8 +93,17 @@ function speak(text){
 function setBusy(b){ busy = b; ['send','finish','mic','start'].forEach(id => $(id).disabled = b); }
 function updateProgress(){ $('progress').textContent = `質問 ${Math.min(asked, maxQ)} / ${maxQ}`; }
 
-async function post(url, body){
-  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+function getPass(){ try { return localStorage.getItem('appPass') || ''; } catch { return ''; } }
+function setPass(v){ try { localStorage.setItem('appPass', v); } catch {} }
+
+async function post(url, body, retried = false){
+  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','x-app-password': getPass()}, body: JSON.stringify(body) });
+  if (r.status === 401 && !retried) {
+    const p = prompt('合言葉を入力してください');
+    if (p === null) throw new Error('合言葉が必要です');
+    setPass(p.trim());
+    return post(url, body, true);
+  }
   const j = await r.json();
   if (!r.ok) throw new Error(j.error || r.statusText);
   return j;
