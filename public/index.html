@@ -89,14 +89,33 @@ function addMsg(role, text){
   const d = document.createElement('div');
   d.className = 'msg ' + role;
   d.innerHTML = `<span class="who">${role === 'assistant' ? 'Interviewer' : 'You'}</span>` + esc(text);
+  if (role === 'assistant') {
+    const b = document.createElement('button');
+    b.textContent = '🔊 もう一度聞く';
+    b.style.cssText = 'display:block;margin-top:8px;font-size:.8rem;padding:4px 10px;min-height:0';
+    b.onclick = () => speak(text, true);
+    d.appendChild(b);
+  }
   $('log').appendChild(d);
   d.scrollIntoView({ behavior:'smooth', block:'end' });
 }
-function speak(text){
-  if (!$('tts').checked || !('speechSynthesis' in window)) return;
+// iOS Safari only allows speech that was "unlocked" by a user tap.
+// Call this synchronously inside a click handler before any await.
+function unlockSpeech(){
+  if (!('speechSynthesis' in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0;
+    speechSynthesis.speak(u);
+  } catch {}
+}
+function speak(text, force = false){
+  if ((!force && !$('tts').checked) || !('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US'; u.rate = 0.95;
+  const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith('en-US'));
+  if (v) u.voice = v;
   speechSynthesis.speak(u);
 }
 function setBusy(b){ busy = b; ['send','finish','mic','start'].forEach(id => $(id).disabled = b); }
@@ -131,6 +150,7 @@ async function nextQuestion(){
 }
 
 $('start').onclick = async () => {
+  unlockSpeech();
   messages = []; asked = 0; maxQ = +$('nq').value;
   $('log').innerHTML = ''; $('feedback').hidden = true; $('composer').hidden = false;
   // The API needs a first user turn; the server adds one if messages is empty,
@@ -142,7 +162,7 @@ $('start').onclick = async () => {
 $('send').onclick = async () => {
   const text = $('answer').value.trim();
   if (!text || busy) return;
-  speechSynthesis.cancel?.();
+  unlockSpeech();
   $('answer').value = '';
   messages.push({ role:'user', content: text });
   addMsg('user', text);
