@@ -5,8 +5,6 @@ The first target role is **Product Support Specialist** (customer-facing technic
 
 I built it to rehearse for my own interviews, and I use it to practice troubleshooting-style and behavioral answers out loud. It is deliberately small: one Express server and one HTML file, with no build step and no database.
 
-**Related project:** [API diagnostic program](<API_DIAGNOSTIC_REPO_URL>), a companion tool for diagnosing Claude API problems (auth, rate limits, request errors).
-
 ## What it does
 
 - **Mock interview.** An AI interviewer asks one question at a time, adds a follow-up when an answer is vague, and gives no feedback until the end. You answer by voice (browser Web Speech API) or by typing. After the session you get feedback: STAR gaps, improved English versions of your answers, naturalness corrections, and three priorities for next time. Coaching text is in Japanese, and example answers are in English.
@@ -66,6 +64,7 @@ The first version asked the model to write a model answer for each question. In 
 ## Roadmap
 
 - [ ] Rate limiting and a daily spend cap on the server
+- [ ] Companion project, in progress: [claude-api-support-lab](https://github.com/KeiichiFukuzawa/claude-api-support-lab), an API diagnostic tool for common Claude API problems (auth, rate limits, request errors). The repository is still empty.
 - [ ] STAR-scored answers with a per-dimension score
 - [ ] Question bank by category (motivation / troubleshooting / behavioral)
 - [ ] Session history view (sessions are already saved in `localStorage`, last 20)
