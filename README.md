@@ -64,7 +64,7 @@ The first version asked the model to write a model answer for each question. In 
 ## Roadmap
 
 - [ ] Rate limiting and a daily spend cap on the server
-- [ ] Companion project, in progress: [claude-api-support-lab](https://github.com/KeiichiFukuzawa/claude-api-support-lab), an API diagnostic tool for common Claude API problems (auth, rate limits, request errors). The repository is still empty.
+- [x] Companion project: [claude-api-support-lab](https://github.com/KeiichiFukuzawa/claude-api-support-lab), a small lab for Claude API support work. It has a diagnose CLI, an escalation report generator, a shared error table, mock tests, and case studies. It is a personal learning project and still growing.
 - [ ] STAR-scored answers with a per-dimension score
 - [ ] Question bank by category (motivation / troubleshooting / behavioral)
 - [ ] Session history view (sessions are already saved in `localStorage`, last 20)
