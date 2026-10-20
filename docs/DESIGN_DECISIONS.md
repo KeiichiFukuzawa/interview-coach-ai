@@ -7,16 +7,17 @@ Four decisions I made while building this, each written the way I would explain 
 **Problem.** The app needs my background and my prepared answers to be useful, but the repository is public and the app runs on a public host.
 
 **What I chose.**
-- Scripts, the facts memo and session history live only in the browser's `localStorage`.
+- The facts memo and session history live only in the browser's `localStorage`.
+- My answer scripts are committed as `public/kanpe.default.txt` on purpose: editing long text on a phone is painful, so I maintain them in the repo and the app loads them. A phone-only edit is kept in `localStorage` as an override.
 - A short career summary (`profile.md`, the same facts as a résumé) is committed on purpose, so the deployed app is accurate without extra setup. Anything more private goes in the gitignored `profile.local.md` or the `PROFILE_MD` variable, which override it.
 - The server has no database and no request logging, so nothing about me is stored there.
-- Scripts, the facts memo and session history are never committed. `profile.example.md` holds made-up placeholders.
+- The facts memo and session history are never committed. `profile.example.md` holds made-up placeholders.
 
 **Why.** The safest data is data that never exists in the repository or on the server's disk, so there is nothing to leak, rotate or clean up later. The career summary is the deliberate exception: it is résumé-level information I am happy to show, and committing it keeps the deployed app's answers accurate.
 
 **Honest limit.** Facts and profile are sent with each request so the model can personalize, which means they reach the Anthropic API at that moment. I would not claim the data never leaves the device. I claim it is never stored by me and never committed.
 
-**Short version.** "I kept my private material (scripts, notes, history) out of the repo and the server's storage by design. It lives in the browser and only travels with a request when the model needs it. The résumé-level career summary is committed on purpose."
+**Short version.** "I kept my private material (notes, history) out of the repo and the server's storage by design. It lives in the browser and only travels with a request when the model needs it. The résumé-level career summary and my own interview answers are committed on purpose, because they are the kind of thing I would show an interviewer anyway."
 
 ## 2. Cost control
 

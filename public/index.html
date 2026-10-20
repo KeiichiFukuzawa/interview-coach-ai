@@ -102,8 +102,8 @@
     </div>
     <div id="kEditor" hidden>
       <textarea id="kText" style="min-height:220px" placeholder="=== 場面名 ===&#10;英文をここに貼る"></textarea>
-      <div class="row"><button id="kSave" class="primary">保存</button></div>
-      <div class="hint">「=== 場面名 ===」の行で場面を区切ります。このスマホのブラウザ内にだけ保存され、サーバーには送られません。</div>
+      <div class="row"><button id="kSave" class="primary">保存</button><button id="kReset">↩ リポジトリ版に戻す</button></div>
+      <div class="hint">「=== 場面名 ===」の行で場面を区切ります。保存すると、このスマホだけの版になります(サーバーには送られません)。「リポジトリ版に戻す」で、配布されている版に戻ります。</div>
     </div>
     <div id="fEditor" hidden>
       <textarea id="fText" style="min-height:260px" placeholder="例:&#10;・会社A(業務自動化): ツール名、作ったもの、結果は〇〇&#10;・会社B(カスタマーサポート): 担当した問い合わせの種類、対応のしかた、結果は〇〇&#10;・使ったソフト名、数字、結果など思い出したこと"></textarea>
@@ -254,6 +254,7 @@ async function showModel(){
 
 $('start').onclick = async () => {
   unlockSpeech();
+  await kanpeReady; // make sure the committed scripts are loaded before planning questions
   messages = []; asked = 0; maxQ = +$('nq').value;
   // Easy mode with saved scripts: ask each scene's question in order, show your own script as the answer.
   const scenes = parseK(loadK()).filter(s => s.lines.length);
@@ -331,7 +332,17 @@ function showTab(k){
 $('tabI').onclick = () => showTab(false);
 $('tabK').onclick = () => showTab(true);
 
-function loadK(){ try { return localStorage.getItem('kanpe') || ''; } catch { return ''; } }
+// Scripts come from the committed default (public/kanpe.default.txt). A phone-only edit,
+// saved under 'kanpeLocal', overrides it until "リポジトリ版に戻す" is pressed.
+let kanpeDefault = '';
+const kanpeReady = fetch('/kanpe.default.txt', { cache: 'no-cache' })
+  .then(r => r.ok ? r.text() : '')
+  .then(t => { kanpeDefault = t; if (!$('viewK').hidden) renderK(); })
+  .catch(() => {});
+function loadK(){
+  try { const l = localStorage.getItem('kanpeLocal'); if (l) return l; } catch {}
+  return kanpeDefault;
+}
 function parseK(t){
   const out = []; let cur = null;
   for (const raw of t.split(/\r?\n/)) {
@@ -416,10 +427,14 @@ function renderK(){
 }
 $('kEdit').onclick = () => { $('kEditor').hidden = !$('kEditor').hidden; $('kText').value = loadK(); };
 $('kSave').onclick = () => {
-  try { localStorage.setItem('kanpe', $('kText').value); } catch {}
+  try { localStorage.setItem('kanpeLocal', $('kText').value); } catch {}
   $('kEditor').hidden = true; renderK();
 };
 $('kHide').onchange = renderK;
+$('kReset').onclick = () => {
+  try { localStorage.removeItem('kanpeLocal'); } catch {}
+  $('kEditor').hidden = true; renderK();
+};
 
 function loadFacts(){ try { return localStorage.getItem('facts') || ''; } catch { return ''; } }
 $('fEdit').onclick = () => { $('fEditor').hidden = !$('fEditor').hidden; $('fText').value = loadFacts(); };

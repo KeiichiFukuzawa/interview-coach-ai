@@ -1,0 +1,115 @@
+=== Tell me about yourself. ===
+
+I graduated from Gunma University in computer science in 2014.
+I have about two years of customer support experience in Japan and Malaysia.
+At Yahoo and NTT, I supported ADSL modems and fiber routers.
+In Malaysia, I worked about one year on the Uber Eats Japan project.
+After that, I worked about one year at CBCloud, a logistics service company.
+I called drivers and trucking companies and arranged the terms.
+Since March 2024, I have worked at Deloitte Tohmatsu as an RPA developer.
+I make apps with Power Platform, and I created training apps and manuals.
+As a Product Support Specialist, I would like to combine my hands-on support experience with my technical background in app development and documentation.
+
+
+=== Can you tell me about your customer support experience? ===
+
+I have about two years of customer support experience in Japan and Malaysia.
+At Yahoo and NTT, I supported ADSL modems and fiber routers.
+It was about six months each.
+In Malaysia, I worked one year on the Uber Eats Japan project.
+I helped drivers, restaurants, and eaters.
+After that, I worked one year at CBCloud, a logistics service company.
+I called drivers and trucking companies and arranged the terms, like price and deadline.
+Now I work at Deloitte as an RPA developer.
+I make apps and training manuals.
+
+
+=== Why do you want to work at Anthropic? ===
+
+My interest in Anthropic comes from a personal experience that changed how I see AI coding tools.
+
+Last month, I spent about $100 on another AI coding service to build a personal software assistant. Even with its top-tier Astra Ultra model, I used up roughly five weeks of weekly usage limits, and the project could not finish a single full test run.
+
+I then switched to Claude Code on the $20 plan, using Sonnet. In about two days, I had a working version. It was not a controlled benchmark, but what surprised me was that a cheaper model delivered what a higher-tier model could not. I was especially impressed by how accurately Sonnet understood my instructions and turned them into working software.
+
+This experience convinced me that Anthropic has the potential to become the world's number one AI company.
+
+At the same time, I am honest about my limits. When I build with AI coding tools, I often feel like a site supervisor who watches progress without fully understanding the implementation. I worry that as AI advances, even the world's top experts may end up in a similar position, like running a nuclear power plant with no one able to maintain it. That is why I believe safety measures are not optional, and why Anthropic's focus on reliable, interpretable, and steerable AI resonates with me.
+
+This also showed me how important product reliability and good customer support are. I know firsthand how frustrating it is when technical problems stop users from reaching their goals.
+
+My background includes technical support for ADSL modems and fiber routers in Japan, and work as a BPO agent supporting Uber in Malaysia, covering delivery drivers (billing and onboarding), restaurant partners, and Uber Eats customers. At Deloitte, I developed apps with Power Platform and Office Scripts, and created training apps and several training manuals.
+
+As a Product Support Specialist, I would like to combine my hands-on support experience with my technical background in app development and documentation to help customers solve technical problems and get the most out of Anthropic's products.
+
+I want to contribute to Anthropic's long-term success and grow alongside a company whose technology I genuinely believe in.
+
+
+=== Why did you apply for the Product Support Specialist role? ===
+
+I want to join Anthropic because I like its products very much, and I want to support the company with everything I have.
+Product support is the role that fits me.
+I worked as an RPA developer, and I learned that I do not have a talent for programming.
+I have experience as an operator, and case handling is a very procedural task.
+I am confident that I can handle cases quickly and accurately.
+I like to help people in trouble.
+It makes me feel that I am doing a good deed.
+I also like to try many products, apps, and technologies.
+I feel that working at Anthropic could expand my world at an accelerating pace.
+
+
+=== How do you handle a difficult customer? ===
+
+First, I stay calm and I listen.
+I do not argue. I say sorry for the trouble.
+Then I ask for the details, like the order and the time.
+I explain what I can do and what I cannot do.
+I do not promise anything I cannot do.
+If I cannot solve it, I escalate with the facts.
+
+For example, at Uber Eats, a certain number of the calls started with shouting.
+Sometimes the customer waited two or three hours.
+I understood why they were angry.
+I did not make excuses, and I explained clearly what I could do.
+Most of the time, I took their anger and talked with them for one or two hours.
+Then their anger calmed down, and we closed the case.
+
+
+=== Can you tell me about a time you solved a customer's problem? ===
+
+At Uber Eats, we had a "ghost customer" problem.
+The driver picked up the food, but the eater's information disappeared.
+It happened many times.
+I felt that these orders looked suspicious.
+Many of them were cash orders, and no payment came.
+The eater names were also strange and hard to read.
+So I told my team leader directly.
+I said I thought they were bad-faith orders.
+I asked the manager to decide how to handle them.
+Then the support team agreed it was a prank.
+We checked the data and force-closed the orders.
+I learned that speaking up early about repeated problems helps the team.
+
+
+=== Can you tell me about a time you failed? ===
+
+At Uber Eats, one failure was that I could not support some delivery drivers who spoke neither Japanese nor English, for example people from countries like Vietnam, Kazakhstan, and Azerbaijan.
+Our Japanese team was meant to support people who could communicate in Japanese or English.
+At that time, internet use was restricted.
+I really did not know what to do.
+I asked my team leader for advice, but in the end I did not call them back.
+Looking back, I think we should at least have shared this information with the client.
+
+
+=== A customer says the Claude API is not working. What would you do? ===
+
+First, I would say sorry for the trouble.
+Then I would ask what they are trying to do.
+Next, I would ask for the error message and the HTTP status code.
+I would also ask for the request ID, the model name, and when it started.
+Then I would try to reproduce the problem.
+I would check the official docs and the status page.
+If I find the cause, I would explain the fix in simple steps.
+If I cannot solve it, I would escalate to engineers with all the details.
+That way, the customer does not need to explain again.
+After that, I would follow up and share what I learned with my team.
