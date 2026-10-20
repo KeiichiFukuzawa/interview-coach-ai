@@ -8,15 +8,15 @@ Four decisions I made while building this, each written the way I would explain 
 
 **What I chose.**
 - Scripts, the facts memo and session history live only in the browser's `localStorage`.
-- The candidate profile is a gitignored file locally and an environment variable on Render.
+- A short career summary (`profile.md`, the same facts as a résumé) is committed on purpose, so the deployed app is accurate without extra setup. Anything more private goes in the gitignored `profile.local.md` or the `PROFILE_MD` variable, which override it.
 - The server has no database and no request logging, so nothing about me is stored there.
-- Only `profile.example.md`, which holds made-up placeholders, is committed.
+- Scripts, the facts memo and session history are never committed. `profile.example.md` holds made-up placeholders.
 
-**Why.** The safest data is data that never exists in the repository or on the server's disk, so there is nothing to leak, rotate or clean up later.
+**Why.** The safest data is data that never exists in the repository or on the server's disk, so there is nothing to leak, rotate or clean up later. The career summary is the deliberate exception: it is résumé-level information I am happy to show, and committing it keeps the deployed app's answers accurate.
 
 **Honest limit.** Facts and profile are sent with each request so the model can personalize, which means they reach the Anthropic API at that moment. I would not claim the data never leaves the device. I claim it is never stored by me and never committed.
 
-**Short version.** "I kept personal data out of the repo and the server's storage by design. It lives in the browser, and it only travels with a request when the model needs it."
+**Short version.** "I kept my private material (scripts, notes, history) out of the repo and the server's storage by design. It lives in the browser and only travels with a request when the model needs it. The résumé-level career summary is committed on purpose."
 
 ## 2. Cost control
 

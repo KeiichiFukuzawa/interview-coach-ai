@@ -34,8 +34,12 @@ app.use("/api", (req, res, next) => {
 function loadProfile() {
   // On hosts without the gitignored file (e.g. Render), set PROFILE_MD instead.
   if (process.env.PROFILE_MD) return process.env.PROFILE_MD;
-  const p = path.join(__dirname, "profile.local.md");
-  return fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "(no candidate profile provided)";
+  // Order: PROFILE_MD env > profile.local.md (gitignored override) > profile.md (committed).
+  for (const name of ["profile.local.md", "profile.md"]) {
+    const p = path.join(__dirname, name);
+    if (fs.existsSync(p)) return fs.readFileSync(p, "utf8");
+  }
+  return "(no candidate profile provided)";
 }
 
 const ROLE = "Product Support Specialist at Anthropic Japan (Tokyo)";

@@ -40,7 +40,7 @@ A cheap and good combination is `MODEL=claude-haiku-5-5` with `FEEDBACK_MODEL=cl
 ### Deploying to Render (to practice on a phone)
 
 1. Render dashboard → New → Blueprint → select this repo (`render.yaml` is picked up).
-2. Set `ANTHROPIC_API_KEY` and `APP_PASSWORD` when prompted, and `PROFILE_MD` if you want a profile.
+2. Set `ANTHROPIC_API_KEY` and `APP_PASSWORD` when prompted, `PROFILE_MD` is optional and overrides the committed `profile.md`.
 3. Open the `https://...onrender.com` URL on your phone. HTTPS is required for the microphone.
 
 The free plan sleeps when idle, so the first request after a break takes about 30-60 seconds.
@@ -50,7 +50,7 @@ The free plan sleeps when idle, so the first request after a break takes about 3
 The longer version, written as talking points, is in [docs/DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md).
 
 **Personal data stays out of the repo and off the server's disk.**
-Scripts, the facts memo and session history live in the browser's `localStorage`. The candidate profile is gitignored (`profile.local.md`) and reaches Render through an environment variable. The server stores nothing: it has no database and no request logging. Facts and profile are sent with each request so the model can use them, which means they do reach the Anthropic API at request time. In the current flow, saved scripts are not sent at all.
+Scripts, the facts memo and session history live in the browser's `localStorage`. A short, résumé-level career summary (`profile.md`) is committed on purpose so the deployed app is accurate without extra setup; anything more private goes in the gitignored `profile.local.md` or the `PROFILE_MD` environment variable, which override it. The server stores nothing: it has no database and no request logging. Facts and profile are sent with each request so the model can use them, which means they do reach the Anthropic API at request time. In the current flow, saved scripts are not sent at all.
 
 **Cost is controlled at several layers.**
 A shared passphrase (compared in constant time) gates every `/api` route, because the app is public and spends my API key. Every call has a `max_tokens` cap, request bodies are limited to 1 MB, and user-supplied text is truncated before it goes into a prompt. Easy mode with saved scripts makes no API call for the model answer. There is no per-user rate limit yet (see the roadmap).
@@ -78,5 +78,6 @@ The first version asked the model to write a model answer for each question. In 
 server.js          Express API: /api/chat, /api/model-answer, /api/feedback
 public/index.html  The whole front end (vanilla JS, no build)
 render.yaml        Render blueprint (free plan)
+profile.md         Career summary used by the prompts (committed on purpose)
 profile.example.md Template for the gitignored profile.local.md
 ```
